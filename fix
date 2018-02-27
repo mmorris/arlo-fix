@@ -1,10 +1,10 @@
 #!/bin/bash
 
 usage(){
-    echo "Usage: arlofix [input-directory] [output_directory]"
+    echo -e "\nUsage: arlofix [input-directory] [output_directory]\n"
     echo "-All arguments are required."
     echo "-Input files are purposefully not overwritten for safety."
-    echo "-[output_directory] will be created if it does not already exist."
+    echo -e "-[output_directory] will be created if it does not already exist.\n"
 }
 
 if [ $# -ne 2 ]
@@ -13,6 +13,9 @@ then
 	exit 0
 
 fi
+
+# Make sure ffmpeg is installed
+hash ffmpeg 2>/dev/null || { echo >&2 "ffmpeg is required to proceed. Consider installing via homebrew, https://brew.sh/"; exit 1; }
 
 input_directory=$1
 shift 1
