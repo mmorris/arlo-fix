@@ -4,34 +4,18 @@ mkdir fixed
 
 for i in *.mp4
 do
+	# Create a filename that contains the date and time
 	filename=$(basename "$i")
-	extension="${filename##*.}"
 	filename="${filename%.*}"
-
 	newname=$(stat -t %Y-%m-%d-%H-%M-%S -f %Sm -- $i)
-	#mv $i $newname-$i
 
 	duration=`ffprobe -i $i -show_entries format=duration -v quiet -of csv="p=0" -sexagesimal`
-	echo DURATION: $duration
 	ffmpeg -err_detect ignore_err -i $i -c copy fixed/temp.mp4
 
 	# does not work. must reencode.
 	#ffmpeg -i fixed/temp.mp4 -vcodec copy -acodec copy -t $duration "fixed/$newname-$i"
+
+	# reencode to fix duration.
 	ffmpeg -i fixed/temp.mp4 -ss 00:00:00 -t $duration -async 1 "fixed/$newname-$i"
 	rm fixed/temp.mp4
 done
-
-#for i in *.mp4
-#do
-#	duration=`ffprobe -i $i -show_entries format=duration -v quiet -of csv="p=0"`
-#	echo DURATION: $duration
-#	ffmpeg -err_detect ignore_err -i $i -c copy temp.mp4
-#	mv temp.mp4 $i
-#	#ffmpeg -i $i -async 1 -c copy -t "$duration" cut.mp4
-#done
-#
-#for i in *.mp4
-#do
-#	ffmpeg -i $i  -ss 00:00:00 -t 0:00:09.282000 -async 1 out.mp4
-#	mv out.mp4 $i
-#done
