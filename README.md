@@ -12,3 +12,5 @@ It reencodes video files you provide and puts a date & timestamp in the filename
 
 # Requirements
 - ffmpeg
+
+**Note**: This script has only been tested on OS X. YMMV.
