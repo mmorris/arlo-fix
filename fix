@@ -1,7 +1,42 @@
 #!/bin/bash
 
-mkdir fixed
+usage(){
+    echo "Usage: arlofix [input-directory] [output_directory]"
+    echo "-All arguments are required."
+    echo "-Input files are purposefully not overwritten for safety."
+    echo "-[output_directory] will be created if it does not already exist."
+}
 
+if [ $# -ne 2 ]
+then
+	usage
+	exit 0
+
+fi
+
+input_directory=$1
+shift 1
+
+output_directory=$1
+shift 1
+
+echo "Input: $input_directory"
+echo "Output: $output_directory"
+
+# Check that input_directory exists.
+if [ ! -d "$input_directory" ]; then
+	echo "ERROR: Unable to locate $input_directory"
+	exit 0
+fi
+
+# Create $output_directory if it doesn't exist.
+if [ ! -d "$output_directory" ]; then
+	mkdir -p "$output_directory"
+fi
+
+work_dir=`mktemp -d`
+
+pushd $input_directory
 for i in *.mp4
 do
 	# Create a filename that contains the date and time
@@ -10,12 +45,16 @@ do
 	newname=$(stat -t %Y-%m-%d-%H-%M-%S -f %Sm -- $i)
 
 	duration=`ffprobe -i $i -show_entries format=duration -v quiet -of csv="p=0" -sexagesimal`
-	ffmpeg -err_detect ignore_err -i $i -c copy fixed/temp.mp4
+	ffmpeg -y -err_detect ignore_err -i $i -c copy $work_dir/temp.mp4
 
 	# does not work. must reencode.
-	#ffmpeg -i fixed/temp.mp4 -vcodec copy -acodec copy -t $duration "fixed/$newname-$i"
+	#ffmpeg -i $output_directory/temp.mp4 -vcodec copy -acodec copy -t $duration "$output_directory/$newname-$i"
 
 	# reencode to fix duration.
-	ffmpeg -i fixed/temp.mp4 -ss 00:00:00 -t $duration -async 1 "fixed/$newname-$i"
-	rm fixed/temp.mp4
+	ffmpeg -y -i $work_dir/temp.mp4 -ss 00:00:00 -t $duration -async 1 "$work_dir/$newname-$i"
 done
+popd
+
+# move everything to the specified output directory
+rm $work_dir/temp.mp4
+mv $work_dir/* $output_directory/
